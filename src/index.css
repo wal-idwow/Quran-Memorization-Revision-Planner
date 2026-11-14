@@ -1,0 +1,61 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    --font-sans-en: 'DM Sans', system-ui, -apple-system, sans-serif;
+    --font-display-en: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    --font-sans-ar: 'IBM Plex Sans Arabic', system-ui, -apple-system, sans-serif;
+    --font-quran: 'Amiri', serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, monospace;
+  }
+
+  html[lang="ar"] {
+    font-family: var(--font-sans-ar);
+  }
+
+  html[lang="en"] {
+    font-family: var(--font-sans-en);
+  }
+
+  html[lang="en"] h1,
+  html[lang="en"] h2,
+  html[lang="en"] h3,
+  html[lang="en"] .font-display {
+    font-family: var(--font-display-en);
+  }
+
+  html[lang="ar"] h1,
+  html[lang="ar"] h2,
+  html[lang="ar"] h3,
+  html[lang="ar"] .font-display {
+    font-family: var(--font-sans-ar);
+  }
+
+  .font-quran {
+    font-family: var(--font-quran);
+  }
+
+  .font-mono-tabular {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Smooth focus visibility */
+*:focus-visible {
+  outline: 2px solid #059669;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
