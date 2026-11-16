@@ -140,7 +140,7 @@ export function PlansView({
       {showBuilder && (
         <form
           onSubmit={handleSavePlan}
-          className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 space-y-6"
+          className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 sm:p-6 space-y-6"
         >
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <div className="lg:col-span-8 space-y-5">
@@ -201,7 +201,7 @@ export function PlansView({
               </div>
 
               {scopeType === 'juz_range' && (
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">
                       {t.plans.fromJuz}
@@ -238,7 +238,7 @@ export function PlansView({
               )}
 
               {scopeType === 'surah_range' && (
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">
                       {t.plans.fromSurah}
@@ -491,7 +491,7 @@ export function PlansView({
                 </div>
               </div>
 
-              <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2 text-xs">
+              <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs">
                 <span className="text-slate-500 dark:text-slate-400 font-mono-tabular">
                   {t.plans.estimatedEnd}: {formatLocalizedDate(stats.estimatedEndDate, lang)}
                 </span>
@@ -534,10 +534,10 @@ export function PlansView({
         })}
       </div>
 
-      {/* Active Plan Day-by-Day Schedule Table */}
+      {/* Active Plan Day-by-Day Schedule */}
       {activePlan && activeSchedule.length > 0 && (
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+          <div className="px-4 sm:px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2">
             <h3 className="font-display text-base font-semibold text-slate-900 dark:text-slate-100">
               {t.plans.schedulePreviewTitle} — {activePlan.name}
             </h3>
@@ -546,7 +546,45 @@ export function PlansView({
             </span>
           </div>
 
-          <div className="overflow-x-auto max-h-96">
+          {/* Mobile Vertical Schedule */}
+          <div className="md:hidden divide-y divide-slate-100 dark:divide-slate-800 max-h-96 overflow-y-auto">
+            {activeSchedule.slice(0, 45).map((row) => (
+              <div
+                key={`${row.dayIndex}-${row.surahId}-${row.ayahFrom}`}
+                className={`p-4 space-y-1.5 ${
+                  row.isCompleted ? 'bg-emerald-50/30 dark:bg-emerald-950/10' : ''
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2 text-xs">
+                  <span className="font-mono-tabular text-slate-500 dark:text-slate-400">
+                    #{row.dayIndex} · {formatLocalizedDate(row.date, lang)}
+                  </span>
+                  <span
+                    className={`font-medium ${
+                      row.isCompleted
+                        ? 'text-emerald-700 dark:text-emerald-400'
+                        : 'text-slate-500 dark:text-slate-400'
+                    }`}
+                  >
+                    {row.isCompleted ? t.plans.completed : t.plans.pending}
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between gap-1">
+                  <span className="font-medium text-sm text-slate-900 dark:text-slate-100">
+                    {lang === 'ar' ? `سورة ${row.surahNameAr}` : row.surahNameEn}
+                  </span>
+                  <span className="font-mono-tabular text-xs text-slate-600 dark:text-slate-300">
+                    {t.wird.ayahRange} {row.ayahFrom}–{row.ayahTo} · {t.wird.pageRange}{' '}
+                    {row.pageFrom}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop Schedule Table */}
+          <div className="hidden md:block overflow-x-auto max-h-96">
             <table className="w-full text-start border-collapse">
               <thead className="sticky top-0 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 text-xs font-medium text-slate-500 dark:text-slate-400">
                 <tr>

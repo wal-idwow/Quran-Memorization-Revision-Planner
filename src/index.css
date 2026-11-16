@@ -5,9 +5,15 @@
   :root {
     --font-sans-en: 'DM Sans', system-ui, -apple-system, sans-serif;
     --font-display-en: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-    --font-sans-ar: 'IBM Plex Sans Arabic', system-ui, -apple-system, sans-serif;
-    --font-quran: 'Amiri', serif;
+    --font-sans-ar: 'IBM Plex Sans Arabic', 'Segoe UI', 'Geeza Pro', 'Tahoma', system-ui, -apple-system, sans-serif;
+    --font-quran: 'Amiri', 'Traditional Arabic', 'Geeza Pro', 'Times New Roman', serif;
     --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, monospace;
+  }
+
+  html,
+  body {
+    overflow-x: hidden;
+    max-width: 100%;
   }
 
   html[lang="ar"] {
@@ -58,4 +64,8 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }

@@ -104,7 +104,7 @@ export function QuranMapView({ lang, progressMap, onUpdateSurah }: QuranMapViewP
               />
             </div>
 
-            <div className="flex flex-wrap items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg w-fit">
+            <div className="w-full sm:w-fit grid grid-cols-3 sm:flex sm:flex-wrap items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg">
               {(
                 [
                   { id: 'all', label: t.map.filterAll },
@@ -118,7 +118,7 @@ export function QuranMapView({ lang, progressMap, onUpdateSurah }: QuranMapViewP
                   key={f.id}
                   type="button"
                   onClick={() => setStatusFilter(f.id)}
-                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap ${
+                  className={`px-2.5 sm:px-3 py-1.5 rounded-md text-xs font-medium text-center transition-colors whitespace-nowrap ${
                     statusFilter === f.id
                       ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-sm'
                       : 'text-slate-600 dark:text-slate-400'
@@ -244,7 +244,7 @@ export function QuranMapView({ lang, progressMap, onUpdateSurah }: QuranMapViewP
       {/* Surah Progress Update Modal */}
       {selectedSurah && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60">
-          <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl overflow-hidden">
+          <div className="w-full max-w-md max-h-[90dvh] overflow-y-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl">
             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800">
               <h3 className="font-display text-base font-semibold text-slate-900 dark:text-slate-100">
                 {lang === 'ar'

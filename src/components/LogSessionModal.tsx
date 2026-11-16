@@ -92,9 +92,9 @@ export function LogSessionModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="log-session-title"
-        className="w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl overflow-hidden"
+        className="w-full max-w-lg max-h-[90dvh] overflow-y-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl"
       >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-slate-200 dark:border-slate-800">
           <h2
             id="log-session-title"
             className="font-display text-base font-semibold text-slate-900 dark:text-slate-100"
@@ -111,7 +111,7 @@ export function LogSessionModal({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4">
           {/* Session Type Segmented Control */}
           <div>
             <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-2">
@@ -164,7 +164,7 @@ export function LogSessionModal({
           </div>
 
           {/* Ayah Range & Duration */}
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3">
             <div>
               <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">
                 {t.modal.ayahFrom}
@@ -191,7 +191,7 @@ export function LogSessionModal({
                 className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-sm font-mono-tabular text-slate-900 dark:text-slate-100"
               />
             </div>
-            <div>
+            <div className="col-span-2 sm:col-span-1">
               <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">
                 {t.modal.duration}
               </label>

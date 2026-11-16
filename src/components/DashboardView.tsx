@@ -1,5 +1,14 @@
 import React, { useMemo } from 'react';
-import { ArrowLeft, ArrowRight, CheckCircle2, Circle, Plus } from 'lucide-react';
+import {
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle2,
+  Circle,
+  Plus,
+  Sparkles,
+  Trash2,
+  Upload,
+} from 'lucide-react';
 import { SURAH_MAP, TOTAL_QURAN_PAGES } from '../data/quranData';
 import { formatLocalizedDate, formatShortDay, TRANSLATIONS } from '../i18n/translations';
 import {
@@ -15,6 +24,7 @@ import { addDaysISO, getPlanStats, getTodayISO } from '../utils/plannerEngine';
 
 interface DashboardViewProps {
   lang: Language;
+  isDemoMode?: boolean;
   activePlan: MemorizationPlan | null;
   nextPlanDayTarget: PlanDayTarget | null;
   memorizedSummary: {
@@ -39,10 +49,14 @@ interface DashboardViewProps {
     ayahFrom: number;
     ayahTo: number;
   }) => void;
+  onStartFresh: () => void;
+  onDismissDemo: () => void;
+  onOpenBackupModal: () => void;
 }
 
 export function DashboardView({
   lang,
+  isDemoMode = false,
   activePlan,
   nextPlanDayTarget,
   memorizedSummary,
@@ -56,6 +70,9 @@ export function DashboardView({
   todayCompletedFarRevision,
   onNavigate,
   onQuickLog,
+  onStartFresh,
+  onDismissDemo,
+  onOpenBackupModal,
 }: DashboardViewProps) {
   const t = TRANSLATIONS[lang];
   const todayISO = getTodayISO();
@@ -106,6 +123,50 @@ export function DashboardView({
 
   return (
     <div className="space-y-6">
+      {isDemoMode && (
+        <section className="rounded-xl border border-emerald-200 dark:border-emerald-800/70 bg-emerald-50/70 dark:bg-emerald-950/30 p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <span className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 shrink-0">
+              <Sparkles className="w-5 h-5" />
+            </span>
+            <div>
+              <h2 className="font-display text-sm font-semibold text-slate-900 dark:text-slate-100">
+                {t.backup.demoBannerTitle}
+              </h2>
+              <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
+                {t.backup.demoBannerDesc}
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:flex sm:flex-wrap items-center gap-2 w-full lg:w-auto shrink-0">
+            <button
+              type="button"
+              onClick={onStartFresh}
+              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg bg-emerald-700 hover:bg-emerald-800 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white text-xs font-medium transition-colors whitespace-nowrap"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>{t.backup.startFreshBtn}</span>
+            </button>
+            <button
+              type="button"
+              onClick={onOpenBackupModal}
+              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-medium transition-colors whitespace-nowrap"
+            >
+              <Upload className="w-3.5 h-3.5" />
+              <span>{t.backup.importBtn}</span>
+            </button>
+            <button
+              type="button"
+              onClick={onDismissDemo}
+              className="px-3 py-2 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 whitespace-nowrap text-center"
+            >
+              {t.backup.keepSampleBtn}
+            </button>
+          </div>
+        </section>
+      )}
+
       {/* 4-Column KPI Strip */}
       <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5">
@@ -199,8 +260,8 @@ export function DashboardView({
       <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Today's 3-Tier Wird */}
         <div className="lg:col-span-7 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
-            <div>
+          <div className="px-4 sm:px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
+            <div className="min-w-0">
               <h2 className="font-display text-base font-semibold text-slate-900 dark:text-slate-100">
                 {t.dashboard.todayTasksTitle}
               </h2>
@@ -220,7 +281,7 @@ export function DashboardView({
 
           <div className="divide-y divide-slate-100 dark:divide-slate-800">
             {/* Tier 1: New Hifz */}
-            <div className="px-6 py-4 flex items-center justify-between gap-4">
+            <div className="px-4 sm:px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-start gap-3 min-w-0">
                 {todayCompletedHifz ? (
                   <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
@@ -232,7 +293,7 @@ export function DashboardView({
                     {t.dashboard.newHifzTier}
                   </p>
                   {nextPlanDayTarget ? (
-                    <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 mt-0.5 truncate">
+                    <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 mt-0.5 break-words">
                       {lang === 'ar'
                         ? `سورة ${nextPlanDayTarget.surahNameAr}`
                         : nextPlanDayTarget.surahNameEn}
@@ -259,7 +320,7 @@ export function DashboardView({
                       ayahTo: nextPlanDayTarget.ayahTo,
                     })
                   }
-                  className="px-3 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white text-xs font-medium whitespace-nowrap shrink-0"
+                  className="w-full sm:w-auto text-center px-3 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white text-xs font-medium whitespace-nowrap shrink-0"
                 >
                   {t.actions.completeTarget}
                 </button>
@@ -271,7 +332,7 @@ export function DashboardView({
             </div>
 
             {/* Tier 2: Near Consolidation */}
-            <div className="px-6 py-4 flex items-center justify-between gap-4">
+            <div className="px-4 sm:px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-start gap-3 min-w-0">
                 {todayCompletedNearRevision ? (
                   <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
@@ -282,7 +343,7 @@ export function DashboardView({
                   <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
                     {t.dashboard.nearRevisionTier}
                   </p>
-                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 mt-0.5 truncate">
+                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 mt-0.5 break-words">
                     {lang === 'ar'
                       ? `سورة ${SURAH_MAP[nextNearSurah]?.nameAr ?? ''}`
                       : SURAH_MAP[nextNearSurah]?.transliteration ?? ''}
@@ -304,7 +365,7 @@ export function DashboardView({
                       ayahTo: SURAH_MAP[nextNearSurah]?.ayahCount ?? 10,
                     })
                   }
-                  className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-medium whitespace-nowrap shrink-0"
+                  className="w-full sm:w-auto text-center px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-medium whitespace-nowrap shrink-0"
                 >
                   {t.actions.markDone}
                 </button>
@@ -316,7 +377,7 @@ export function DashboardView({
             </div>
 
             {/* Tier 3: Far Revision (Manzil) */}
-            <div className="px-6 py-4 flex items-center justify-between gap-4">
+            <div className="px-4 sm:px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-start gap-3 min-w-0">
                 {todayCompletedFarRevision ? (
                   <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
@@ -327,7 +388,7 @@ export function DashboardView({
                   <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
                     {t.dashboard.farRevisionTier}
                   </p>
-                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 mt-0.5 truncate">
+                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 mt-0.5 break-words">
                     {lang === 'ar'
                       ? `سورة ${SURAH_MAP[nextFarSurah]?.nameAr ?? ''}`
                       : SURAH_MAP[nextFarSurah]?.transliteration ?? ''}
@@ -349,7 +410,7 @@ export function DashboardView({
                       ayahTo: SURAH_MAP[nextFarSurah]?.ayahCount ?? 30,
                     })
                   }
-                  className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-medium whitespace-nowrap shrink-0"
+                  className="w-full sm:w-auto text-center px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-medium whitespace-nowrap shrink-0"
                 >
                   {t.actions.reviewNow}
                 </button>
@@ -363,7 +424,7 @@ export function DashboardView({
         </div>
 
         {/* Active Plan Summary */}
-        <div className="lg:col-span-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6">
+        <div className="lg:col-span-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 sm:p-6">
           <div className="flex items-center justify-between gap-2">
             <h2 className="font-display text-base font-semibold text-slate-900 dark:text-slate-100">
               {t.dashboard.activePlanTitle}
@@ -461,12 +522,12 @@ export function DashboardView({
       {/* Bottom Split: 14-Day Pace Chart + Due Revisions Queue */}
       <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* 14-Day Pace SVG Bar Chart */}
-        <div className="lg:col-span-7 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6">
+        <div className="lg:col-span-7 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 sm:p-6">
           <div className="flex flex-wrap items-center justify-between gap-2 mb-5">
             <h2 className="font-display text-base font-semibold text-slate-900 dark:text-slate-100">
               {t.dashboard.activityChartTitle}
             </h2>
-            <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
+            <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs text-slate-500 dark:text-slate-400">
               <span className="inline-flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-sm bg-emerald-600 dark:bg-emerald-500 inline-block" />
                 {t.dashboard.newHifzTier}
@@ -478,7 +539,7 @@ export function DashboardView({
             </div>
           </div>
 
-          <div className="grid grid-cols-14 gap-1.5 sm:gap-2 items-end h-44 pt-4 border-b border-slate-200 dark:border-slate-800 pb-2">
+          <div className="grid grid-cols-14 gap-1 sm:gap-2 items-end h-44 pt-4 border-b border-slate-200 dark:border-slate-800 pb-2">
             {activityDays.map((day) => {
               const hifzPct = Math.round((day.hifzPages / maxActivity) * 100);
               const revPct = Math.round((day.revPages / maxActivity) * 100);
@@ -518,7 +579,7 @@ export function DashboardView({
 
         {/* Upcoming Revisions */}
         <div className="lg:col-span-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2">
+          <div className="px-4 sm:px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2">
             <h2 className="font-display text-base font-semibold text-slate-900 dark:text-slate-100">
               {t.dashboard.upcomingReviewsTitle}
             </h2>
@@ -533,7 +594,7 @@ export function DashboardView({
           </div>
 
           {dueSurahs.length === 0 ? (
-            <p className="px-6 py-8 text-sm text-center text-slate-500 dark:text-slate-400">
+            <p className="px-4 sm:px-6 py-8 text-sm text-center text-slate-500 dark:text-slate-400">
               {t.dashboard.allCaughtUp}
             </p>
           ) : (
@@ -544,7 +605,7 @@ export function DashboardView({
                 return (
                   <div
                     key={item.surahId}
-                    className="px-6 py-3.5 flex items-center justify-between gap-3"
+                    className="px-4 sm:px-6 py-3.5 flex flex-wrap sm:flex-nowrap items-center justify-between gap-3"
                   >
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">

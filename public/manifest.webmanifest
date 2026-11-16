@@ -1,0 +1,28 @@
+{
+  "name": "إتقان | منصة حفظ القرآن الكريم وتخطيط المراجعة",
+  "short_name": "إتقان",
+  "description": "منصة متكاملة ثنائية اللغة لتنظيم خطط حفظ القرآن الكريم، والأهداف اليومية، ودورات المراجعة المتباعدة على الهاتف والحاسوب في وضعي الاتصال والانقطاع.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "dir": "rtl",
+  "lang": "ar",
+  "background_color": "#f8fafc",
+  "theme_color": "#047857",
+  "categories": ["education", "productivity", "lifestyle"],
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

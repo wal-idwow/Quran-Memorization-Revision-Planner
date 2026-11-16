@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { BottomNav } from './components/BottomNav';
 import { DailyWirdView } from './components/DailyWirdView';
 import { DashboardView } from './components/DashboardView';
+import { DataBackupModal } from './components/DataBackupModal';
 import { LogSessionModal } from './components/LogSessionModal';
 import { PlansView } from './components/PlansView';
 import { QuranMapView } from './components/QuranMapView';
@@ -12,10 +14,12 @@ import { SURAH_MAP } from './data/quranData';
 import { useQuranStore } from './hooks/useQuranStore';
 import { QualityRating, SessionType } from './types/quran';
 import { getTodayISO } from './utils/plannerEngine';
+import { usePwaStatus } from './utils/pwaManager';
 
 export default function App() {
   const {
     state,
+    storagePersisted,
     activeView,
     setActiveView,
     activePlan,
@@ -42,10 +46,19 @@ export default function App() {
     markNotificationRead,
     markAllNotificationsRead,
     triggerTestNotification,
+    resetDemoData,
+    startFreshEmpty,
+    dismissDemoBanner,
+    deleteSession,
+    exportBackupJSON,
+    importBackupJSON,
   } = useQuranStore();
+
+  const { isOnline, isOfflineReady, canInstall, installApp } = usePwaStatus();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [logModalOpen, setLogModalOpen] = useState(false);
+  const [backupModalOpen, setBackupModalOpen] = useState(false);
   const [modalInitial, setModalInitial] = useState<{
     type: SessionType;
     surahId: number;
@@ -97,13 +110,18 @@ export default function App() {
   const unreadCount = state.notifications.filter((n) => !n.read).length;
 
   return (
-    <div className="min-h-screen flex bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden flex bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
       <Sidebar
         lang={state.lang}
         theme={state.theme}
         activeView={activeView}
         unreadCount={unreadCount}
         mobileOpen={mobileMenuOpen}
+        isOnline={isOnline}
+        isOfflineReady={isOfflineReady}
+        canInstall={canInstall}
+        onInstallApp={installApp}
+        onOpenBackupModal={() => setBackupModalOpen(true)}
         onCloseMobile={() => setMobileMenuOpen(false)}
         onSelectView={setActiveView}
         onToggleTheme={toggleTheme}
@@ -115,6 +133,10 @@ export default function App() {
           lang={state.lang}
           activeView={activeView}
           notifications={state.notifications}
+          isOnline={isOnline}
+          canInstall={canInstall}
+          onInstallApp={installApp}
+          onOpenBackupModal={() => setBackupModalOpen(true)}
           onOpenMobileMenu={() => setMobileMenuOpen(true)}
           onToggleLang={() => setLang(state.lang === 'ar' ? 'en' : 'ar')}
           onOpenLogModal={handleOpenDefaultLog}
@@ -123,10 +145,11 @@ export default function App() {
           onNavigateReminders={() => setActiveView('reminders')}
         />
 
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
+        <main className="flex-1 min-w-0 w-full max-w-7xl mx-auto p-3.5 sm:p-6 lg:p-8 pb-24 lg:pb-8">
           {activeView === 'dashboard' && (
             <DashboardView
               lang={state.lang}
+              isDemoMode={state.isDemoMode}
               activePlan={activePlan}
               nextPlanDayTarget={nextPlanDayTarget}
               memorizedSummary={memorizedSummary}
@@ -140,6 +163,9 @@ export default function App() {
               todayCompletedFarRevision={todayCompletedFarRevision}
               onNavigate={setActiveView}
               onQuickLog={handleOpenQuickLog}
+              onStartFresh={startFreshEmpty}
+              onDismissDemo={dismissDemoBanner}
+              onOpenBackupModal={() => setBackupModalOpen(true)}
             />
           )}
 
@@ -154,6 +180,7 @@ export default function App() {
               todayCompletedFarRevision={todayCompletedFarRevision}
               onQuickLog={handleOpenQuickLog}
               onOpenCustomModal={handleOpenDefaultLog}
+              onDeleteSession={deleteSession}
             />
           )}
 
@@ -213,6 +240,27 @@ export default function App() {
         initialAyahTo={modalInitial.ayahTo}
         onClose={() => setLogModalOpen(false)}
         onSubmit={logSession}
+      />
+
+      <DataBackupModal
+        open={backupModalOpen}
+        lang={state.lang}
+        isOnline={isOnline}
+        isOfflineReady={isOfflineReady}
+        storagePersisted={storagePersisted}
+        canInstall={canInstall}
+        onInstallApp={installApp}
+        onClose={() => setBackupModalOpen(false)}
+        onExport={exportBackupJSON}
+        onImport={importBackupJSON}
+        onStartFresh={startFreshEmpty}
+        onResetDemo={resetDemoData}
+      />
+
+      <BottomNav
+        lang={state.lang}
+        activeView={activeView}
+        onSelectView={setActiveView}
       />
     </div>
   );

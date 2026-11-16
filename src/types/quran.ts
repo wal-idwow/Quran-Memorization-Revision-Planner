@@ -135,3 +135,15 @@ export type ActiveView =
   | 'revision'
   | 'map'
   | 'reminders';
+
+export interface StoredState {
+  lang: Language;
+  theme: ThemeMode;
+  plans: MemorizationPlan[];
+  sessions: StudySession[];
+  progressMap: Record<number, SurahProgress>;
+  reminderSettings: ReminderSettings;
+  notifications: AppNotification[];
+  manzilCycleDays: number;
+  isDemoMode?: boolean;
+}

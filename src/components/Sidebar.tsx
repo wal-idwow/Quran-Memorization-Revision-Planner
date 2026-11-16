@@ -4,10 +4,14 @@ import {
   BookOpenCheck,
   CalendarClock,
   Compass,
+  Database,
+  Download,
   LayoutDashboard,
   Moon,
   Repeat,
   Sun,
+  Wifi,
+  WifiOff,
   X,
 } from 'lucide-react';
 import { TRANSLATIONS } from '../i18n/translations';
@@ -20,6 +24,11 @@ interface SidebarProps {
   activeView: ActiveView;
   unreadCount: number;
   mobileOpen: boolean;
+  isOnline: boolean;
+  isOfflineReady: boolean;
+  canInstall: boolean;
+  onInstallApp: () => void;
+  onOpenBackupModal: () => void;
   onCloseMobile: () => void;
   onSelectView: (view: ActiveView) => void;
   onToggleTheme: () => void;
@@ -32,6 +41,11 @@ export function Sidebar({
   activeView,
   unreadCount,
   mobileOpen,
+  isOnline,
+  isOfflineReady,
+  canInstall,
+  onInstallApp,
+  onOpenBackupModal,
   onCloseMobile,
   onSelectView,
   onToggleTheme,
@@ -113,8 +127,52 @@ export function Sidebar({
         })}
       </nav>
 
-      {/* Bottom Theme & Language Controls */}
+      {/* Bottom PWA Status, Backup, Theme & Language Controls */}
       <div className="p-3 border-t border-slate-200 dark:border-slate-800 space-y-1.5">
+        <div className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-950/60 text-xs">
+          <span className="inline-flex items-center gap-2 text-slate-600 dark:text-slate-300">
+            {isOnline ? (
+              <Wifi className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            ) : (
+              <WifiOff className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+            )}
+            <span>{isOnline ? t.pwa.online : t.pwa.offline}</span>
+          </span>
+          {isOfflineReady && (
+            <span className="text-[10px] font-medium text-emerald-700 dark:text-emerald-400">
+              {lang === 'ar' ? 'Offline ✓' : 'PWA ✓'}
+            </span>
+          )}
+        </div>
+
+        {canInstall && (
+          <button
+            type="button"
+            onClick={() => {
+              onInstallApp();
+              onCloseMobile();
+            }}
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg bg-emerald-700 hover:bg-emerald-800 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white text-sm font-medium transition-colors whitespace-nowrap"
+          >
+            <Download className="w-4 h-4 shrink-0" />
+            <span>{t.pwa.installApp}</span>
+          </button>
+        )}
+
+        <button
+          type="button"
+          onClick={() => {
+            onOpenBackupModal();
+            onCloseMobile();
+          }}
+          className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800/70 dark:hover:text-slate-100 transition-colors whitespace-nowrap"
+        >
+          <span className="flex items-center gap-2.5">
+            <Database className="w-4 h-4 shrink-0" />
+            <span>{t.backup.menuLabel}</span>
+          </span>
+        </button>
+
         <button
           type="button"
           onClick={onToggleTheme}

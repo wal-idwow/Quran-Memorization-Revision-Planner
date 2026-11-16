@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { SURAH_MAP } from '../data/quranData';
 import {
   ActiveView,
@@ -7,9 +7,9 @@ import {
   MemorizationPlan,
   QualityRating,
   ReminderSettings,
+  StoredState,
   StudySession,
   SurahProgress,
-  ThemeMode,
 } from '../types/quran';
 import {
   dispatchSystemNotification,
@@ -23,19 +23,14 @@ import {
   generatePlanSchedule,
   getTodayISO,
 } from '../utils/plannerEngine';
+import {
+  loadStateFromIDB,
+  requestPersistentStorage,
+  saveStateToIDB,
+  validateBackupPayload,
+} from '../utils/storageEngine';
 
 const STORAGE_KEY = 'itqan_quran_planner_v1';
-
-interface StoredState {
-  lang: Language;
-  theme: ThemeMode;
-  plans: MemorizationPlan[];
-  sessions: StudySession[];
-  progressMap: Record<number, SurahProgress>;
-  reminderSettings: ReminderSettings;
-  notifications: AppNotification[];
-  manzilCycleDays: number;
-}
 
 function buildInitialState(): StoredState {
   const today = getTodayISO();
@@ -278,7 +273,19 @@ function buildInitialState(): StoredState {
     reminderSettings,
     notifications,
     manzilCycleDays: 7,
+    isDemoMode: true,
   };
+}
+
+function hasValidLocalStorage(): boolean {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    const parsed = JSON.parse(raw) as StoredState;
+    return Boolean(parsed && Array.isArray(parsed.plans));
+  } catch {
+    return false;
+  }
 }
 
 function loadState(): StoredState {
@@ -296,15 +303,48 @@ function loadState(): StoredState {
 }
 
 export function useQuranStore() {
+  const hadLocalOnBoot = useRef<boolean>(hasValidLocalStorage());
+  const idbReadyRef = useRef<boolean>(hadLocalOnBoot.current);
   const [state, setState] = useState<StoredState>(loadState);
   const [activeView, setActiveView] = useState<ActiveView>('dashboard');
+  const [storagePersisted, setStoragePersisted] = useState<boolean>(false);
 
-  // Persist to localStorage
+  // Request persistent storage & recover from IndexedDB if localStorage was cleared
+  useEffect(() => {
+    let active = true;
+    requestPersistentStorage().then((persisted) => {
+      if (active) setStoragePersisted(persisted);
+    });
+
+    if (!hadLocalOnBoot.current) {
+      loadStateFromIDB<StoredState>().then((recovered) => {
+        if (!active) return;
+        idbReadyRef.current = true;
+        if (recovered && Array.isArray(recovered.plans)) {
+          setState(recovered);
+        } else {
+          setState((curr) => {
+            void saveStateToIDB(curr);
+            return curr;
+          });
+        }
+      });
+    }
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // Persist to localStorage and mirror to IndexedDB
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     } catch {
       // Ignore storage quota errors
+    }
+    if (idbReadyRef.current) {
+      void saveStateToIDB(state);
     }
   }, [state]);
 
@@ -674,8 +714,76 @@ export function useQuranStore() {
     }));
   }, []);
 
+  const startFreshEmpty = useCallback(() => {
+    setState((prev) => ({
+      ...prev,
+      plans: [],
+      sessions: [],
+      progressMap: {},
+      notifications: [],
+      isDemoMode: false,
+    }));
+  }, []);
+
+  const dismissDemoBanner = useCallback(() => {
+    setState((prev) => ({
+      ...prev,
+      isDemoMode: false,
+    }));
+  }, []);
+
+  const deleteSession = useCallback((sessionId: string) => {
+    setState((prev) => {
+      const target = prev.sessions.find((s) => s.id === sessionId);
+      if (!target) return prev;
+
+      const updatedPlans =
+        target.type === 'new_hifz'
+          ? prev.plans.map((p) =>
+              p.isActive && p.completedDaysCount > 0
+                ? { ...p, completedDaysCount: p.completedDaysCount - 1 }
+                : p
+            )
+          : prev.plans;
+
+      return {
+        ...prev,
+        sessions: prev.sessions.filter((s) => s.id !== sessionId),
+        plans: updatedPlans,
+      };
+    });
+  }, []);
+
+  const exportBackupJSON = useCallback(() => {
+    const payload = {
+      app: 'itqan',
+      version: '1.0.0',
+      exportedAt: new Date().toISOString(),
+      state,
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {
+      type: 'application/json;charset=utf-8',
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `itqan-backup-${getTodayISO()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [state]);
+
+  const importBackupJSON = useCallback((rawJson: string): { ok: boolean; error?: string } => {
+    const result = validateBackupPayload(rawJson);
+    if (!result.ok) {
+      return result;
+    }
+    setState(result.state);
+    return { ok: true };
+  }, []);
+
   return {
     state,
+    storagePersisted,
     activeView,
     setActiveView,
     activePlan,
@@ -703,5 +811,10 @@ export function useQuranStore() {
     markAllNotificationsRead,
     triggerTestNotification,
     resetDemoData,
+    startFreshEmpty,
+    dismissDemoBanner,
+    deleteSession,
+    exportBackupJSON,
+    importBackupJSON,
   };
 }

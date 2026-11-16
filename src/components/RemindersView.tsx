@@ -112,7 +112,7 @@ export function RemindersView({
 
       {/* Browser Permission & Sound/Quiet Hours */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-7 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 space-y-5">
+        <div className="lg:col-span-7 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 sm:p-6 space-y-5">
           <div className="flex flex-wrap items-start justify-between gap-4 pb-5 border-b border-slate-100 dark:border-slate-800">
             <div>
               <h3 className="font-semibold text-base text-slate-900 dark:text-slate-100 flex items-center gap-2">
@@ -172,7 +172,7 @@ export function RemindersView({
                 />
               </label>
               {settings.quietHoursEnabled && (
-                <div className="flex items-center gap-3 text-xs">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs">
                   <span className="text-slate-500 dark:text-slate-400">{t.reminders.quietFrom}</span>
                   <input
                     type="time"
@@ -219,7 +219,7 @@ export function RemindersView({
 
         {/* Smart Notification Log */}
         <div className="lg:col-span-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
-          <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+          <div className="px-4 sm:px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2">
             <h3 className="font-semibold text-base text-slate-900 dark:text-slate-100">
               {t.reminders.inboxTitle}
             </h3>
@@ -227,7 +227,7 @@ export function RemindersView({
               <button
                 type="button"
                 onClick={onMarkAllRead}
-                className="text-xs font-medium text-emerald-700 dark:text-emerald-400 hover:underline"
+                className="text-xs font-medium text-emerald-700 dark:text-emerald-400 hover:underline shrink-0"
               >
                 {t.reminders.markAllRead}
               </button>
@@ -236,14 +236,14 @@ export function RemindersView({
 
           <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-80 overflow-y-auto">
             {notifications.length === 0 ? (
-              <p className="px-5 py-8 text-sm text-center text-slate-500 dark:text-slate-400">
+              <p className="px-4 sm:px-5 py-8 text-sm text-center text-slate-500 dark:text-slate-400">
                 {t.reminders.emptyInbox}
               </p>
             ) : (
               notifications.map((n) => (
                 <div
                   key={n.id}
-                  className={`px-5 py-3.5 flex items-start justify-between gap-3 ${
+                  className={`px-4 sm:px-5 py-3.5 flex items-start justify-between gap-3 ${
                     !n.read ? 'bg-emerald-50/40 dark:bg-emerald-950/20' : ''
                   }`}
                 >
@@ -274,7 +274,7 @@ export function RemindersView({
 
       {/* Scheduled Smart Triggers */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800">
+        <div className="px-4 sm:px-6 py-4 border-b border-slate-200 dark:border-slate-800">
           <h3 className="font-display text-base font-semibold text-slate-900 dark:text-slate-100">
             {t.reminders.rulesTitle}
           </h3>
@@ -284,7 +284,7 @@ export function RemindersView({
           {settings.rules.map((rule) => (
             <div
               key={rule.id}
-              className="px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+              className="px-4 sm:px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
             >
               <div className="flex items-start gap-3">
                 <input

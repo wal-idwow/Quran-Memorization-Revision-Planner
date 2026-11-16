@@ -1,5 +1,5 @@
-import React from 'react';
-import { CheckCircle2, Circle, Plus } from 'lucide-react';
+import React, { useState } from 'react';
+import { CheckCircle2, Circle, Plus, Trash2 } from 'lucide-react';
 import { SURAH_MAP } from '../data/quranData';
 import { formatLocalizedDate, TRANSLATIONS } from '../i18n/translations';
 import {
@@ -25,6 +25,7 @@ interface DailyWirdViewProps {
     ayahTo: number;
   }) => void;
   onOpenCustomModal: () => void;
+  onDeleteSession: (sessionId: string) => void;
 }
 
 export function DailyWirdView({
@@ -37,8 +38,10 @@ export function DailyWirdView({
   todayCompletedFarRevision,
   onQuickLog,
   onOpenCustomModal,
+  onDeleteSession,
 }: DailyWirdViewProps) {
   const t = TRANSLATIONS[lang];
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const recentHifz = sessions.find((s) => s.type === 'new_hifz');
   const nearSurah = recentHifz ? SURAH_MAP[recentHifz.surahId] : SURAH_MAP[112];
@@ -227,80 +230,186 @@ export function DailyWirdView({
         </div>
       </div>
 
-      {/* Session Ledger Table */}
+      {/* Session Ledger */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800">
+        <div className="px-4 sm:px-6 py-4 border-b border-slate-200 dark:border-slate-800">
           <h3 className="font-display text-base font-semibold text-slate-900 dark:text-slate-100">
             {t.wird.sessionHistory}
           </h3>
         </div>
 
         {sessions.length === 0 ? (
-          <p className="px-6 py-8 text-sm text-center text-slate-500 dark:text-slate-400">
+          <p className="px-4 sm:px-6 py-8 text-sm text-center text-slate-500 dark:text-slate-400">
             {t.wird.emptyHistory}
           </p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-start border-collapse">
-              <thead>
-                <tr className="border-b border-slate-200 dark:border-slate-800 text-xs font-medium text-slate-500 dark:text-slate-400">
-                  <th className="py-3 px-6 text-start">{t.plans.dateCol}</th>
-                  <th className="py-3 px-4 text-start">{t.modal.sessionType}</th>
-                  <th className="py-3 px-4 text-start">{t.plans.surahCol}</th>
-                  <th className="py-3 px-4 text-end">{t.plans.portionCol}</th>
-                  <th className="py-3 px-4 text-end">{t.modal.duration}</th>
-                  <th className="py-3 px-6 text-end">{t.modal.ratingLabel}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
-                {sessions.slice(0, 15).map((s) => {
-                  const surah = SURAH_MAP[s.surahId];
-                  const typeLabel =
-                    s.type === 'new_hifz'
-                      ? t.modal.typeNewHifz
-                      : s.type === 'near_revision'
-                      ? t.modal.typeNearRevision
-                      : t.modal.typeFarRevision;
-                  const ratingCls =
-                    s.rating === 'mutqin'
-                      ? 'text-emerald-700 dark:text-emerald-400'
-                      : s.rating === 'good'
-                      ? 'text-amber-700 dark:text-amber-400'
-                      : 'text-rose-700 dark:text-rose-400';
+          <>
+            {/* Mobile Vertical Cards */}
+            <div className="md:hidden divide-y divide-slate-100 dark:divide-slate-800">
+              {sessions.slice(0, 15).map((s) => {
+                const surah = SURAH_MAP[s.surahId];
+                const typeLabel =
+                  s.type === 'new_hifz'
+                    ? t.modal.typeNewHifz
+                    : s.type === 'near_revision'
+                    ? t.modal.typeNearRevision
+                    : t.modal.typeFarRevision;
+                const ratingCls =
+                  s.rating === 'mutqin'
+                    ? 'text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50'
+                    : s.rating === 'good'
+                    ? 'text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50'
+                    : 'text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/50';
 
-                  return (
-                    <tr
-                      key={s.id}
-                      className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors"
-                    >
-                      <td className="py-3 px-6 font-mono-tabular text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
-                        {formatLocalizedDate(s.date, lang)}
-                      </td>
-                      <td className="py-3 px-4 text-slate-700 dark:text-slate-300 whitespace-nowrap">
-                        {typeLabel}
-                      </td>
-                      <td className="py-3 px-4 font-medium text-slate-900 dark:text-slate-100 whitespace-nowrap">
-                        {surah
-                          ? lang === 'ar'
-                            ? `سورة ${surah.nameAr}`
-                            : surah.transliteration
-                          : s.surahId}
-                      </td>
-                      <td className="py-3 px-4 text-end font-mono-tabular text-slate-600 dark:text-slate-300 whitespace-nowrap">
-                        {s.ayahFrom}–{s.ayahTo} · {s.pagesCovered} {t.dashboard.pagesLabel}
-                      </td>
-                      <td className="py-3 px-4 text-end font-mono-tabular text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                return (
+                  <div key={s.id} className="p-4 space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="font-semibold text-sm text-slate-900 dark:text-slate-100">
+                          {surah
+                            ? lang === 'ar'
+                              ? `سورة ${surah.nameAr}`
+                              : surah.transliteration
+                            : s.surahId}
+                        </p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                          {typeLabel}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <span className={`px-2 py-0.5 rounded-md text-xs font-medium ${ratingCls}`}>
+                          {t.ratings[s.rating]}
+                        </span>
+                        {confirmDeleteId === s.id ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              onDeleteSession(s.id);
+                              setConfirmDeleteId(null);
+                            }}
+                            className="px-2 py-1 rounded bg-rose-600 text-white text-xs font-medium hover:bg-rose-700"
+                          >
+                            {t.actions.delete}
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setConfirmDeleteId(s.id)}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                            title={t.wird.deleteSession}
+                            aria-label={t.wird.deleteSession}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500 dark:text-slate-400 font-mono-tabular">
+                      <span>{formatLocalizedDate(s.date, lang)}</span>
+                      <span>·</span>
+                      <span>
+                        {t.wird.ayahRange} {s.ayahFrom}–{s.ayahTo} ({s.pagesCovered} {t.dashboard.pagesLabel})
+                      </span>
+                      <span>·</span>
+                      <span>
                         {s.durationMinutes} {t.wird.minutes}
-                      </td>
-                      <td className={`py-3 px-6 text-end font-medium whitespace-nowrap ${ratingCls}`}>
-                        {t.ratings[s.rating]}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Desktop Table */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-start border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-200 dark:border-slate-800 text-xs font-medium text-slate-500 dark:text-slate-400">
+                    <th className="py-3 px-6 text-start">{t.plans.dateCol}</th>
+                    <th className="py-3 px-4 text-start">{t.modal.sessionType}</th>
+                    <th className="py-3 px-4 text-start">{t.plans.surahCol}</th>
+                    <th className="py-3 px-4 text-end">{t.plans.portionCol}</th>
+                    <th className="py-3 px-4 text-end">{t.modal.duration}</th>
+                    <th className="py-3 px-4 text-end">{t.modal.ratingLabel}</th>
+                    <th className="py-3 px-4 text-end">{t.actions.delete}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
+                  {sessions.slice(0, 15).map((s) => {
+                    const surah = SURAH_MAP[s.surahId];
+                    const typeLabel =
+                      s.type === 'new_hifz'
+                        ? t.modal.typeNewHifz
+                        : s.type === 'near_revision'
+                        ? t.modal.typeNearRevision
+                        : t.modal.typeFarRevision;
+                    const ratingCls =
+                      s.rating === 'mutqin'
+                        ? 'text-emerald-700 dark:text-emerald-400'
+                        : s.rating === 'good'
+                        ? 'text-amber-700 dark:text-amber-400'
+                        : 'text-rose-700 dark:text-rose-400';
+
+                    return (
+                      <tr
+                        key={s.id}
+                        className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors"
+                      >
+                        <td className="py-3 px-6 font-mono-tabular text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                          {formatLocalizedDate(s.date, lang)}
+                        </td>
+                        <td className="py-3 px-4 text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                          {typeLabel}
+                        </td>
+                        <td className="py-3 px-4 font-medium text-slate-900 dark:text-slate-100 whitespace-nowrap">
+                          {surah
+                            ? lang === 'ar'
+                              ? `سورة ${surah.nameAr}`
+                              : surah.transliteration
+                            : s.surahId}
+                        </td>
+                        <td className="py-3 px-4 text-end font-mono-tabular text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                          {s.ayahFrom}–{s.ayahTo} · {s.pagesCovered} {t.dashboard.pagesLabel}
+                        </td>
+                        <td className="py-3 px-4 text-end font-mono-tabular text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                          {s.durationMinutes} {t.wird.minutes}
+                        </td>
+                        <td className={`py-3 px-4 text-end font-medium whitespace-nowrap ${ratingCls}`}>
+                          {t.ratings[s.rating]}
+                        </td>
+                        <td className="py-3 px-4 text-end whitespace-nowrap">
+                          {confirmDeleteId === s.id ? (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                onDeleteSession(s.id);
+                                setConfirmDeleteId(null);
+                              }}
+                              className="px-2 py-1 rounded bg-rose-600 text-white text-xs font-medium hover:bg-rose-700"
+                            >
+                              {t.actions.delete}
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => setConfirmDeleteId(s.id)}
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                              title={t.wird.deleteSession}
+                              aria-label={t.wird.deleteSession}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
     </div>
