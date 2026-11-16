@@ -134,7 +134,8 @@ export type ActiveView =
   | 'plans'
   | 'revision'
   | 'map'
-  | 'reminders';
+  | 'reminders'
+  | 'guide';
 
 export interface StoredState {
   lang: Language;
@@ -146,4 +147,22 @@ export interface StoredState {
   notifications: AppNotification[];
   manzilCycleDays: number;
   isDemoMode?: boolean;
+  onboardingCompleted?: boolean;
+}
+
+export interface OnboardingSetupPayload {
+  memorizedSurahIds: number[];
+  initialRating: QualityRating;
+  createInitialPlan: boolean;
+  planName: string;
+  scopeType: 'full_quran' | 'juz_range';
+  juzFrom: number;
+  juzTo: number;
+  direction: 'forward' | 'reverse';
+  dailyAmount: number;
+  dailyUnit: DailyUnit;
+  activeDaysPerWeek: number;
+  manzilCycleDays: number;
+  morningReminderTime: string;
+  eveningReminderTime: string;
 }

@@ -149,6 +149,8 @@ export function validateBackupPayload(
         ? candidate.manzilCycleDays
         : 7,
     isDemoMode: false,
+    onboardingCompleted:
+      typeof candidate.onboardingCompleted === 'boolean' ? candidate.onboardingCompleted : true,
   };
 
   return { ok: true, state: normalizedState };

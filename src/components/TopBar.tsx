@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bell, Check, Database, Download, Globe, Menu, Plus, Wifi, WifiOff } from 'lucide-react';
+import { Bell, Check, Download, Globe, HelpCircle, Menu, Plus, WifiOff } from 'lucide-react';
 import { TRANSLATIONS } from '../i18n/translations';
 import { ActiveView, AppNotification, Language } from '../types/quran';
 
@@ -10,7 +10,7 @@ interface TopBarProps {
   isOnline: boolean;
   canInstall: boolean;
   onInstallApp: () => void;
-  onOpenBackupModal: () => void;
+  onOpenGuide: () => void;
   onOpenMobileMenu: () => void;
   onToggleLang: () => void;
   onOpenLogModal: () => void;
@@ -26,7 +26,7 @@ export function TopBar({
   isOnline,
   canInstall,
   onInstallApp,
-  onOpenBackupModal,
+  onOpenGuide,
   onOpenMobileMenu,
   onToggleLang,
   onOpenLogModal,
@@ -46,6 +46,7 @@ export function TopBar({
     revision: t.nav.revision,
     map: t.nav.map,
     reminders: t.nav.reminders,
+    guide: t.nav.guide,
   };
 
   return (
@@ -56,7 +57,7 @@ export function TopBar({
           type="button"
           onClick={onOpenMobileMenu}
           className="lg:hidden p-2 -ms-1.5 sm:-ms-2 rounded-lg text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 shrink-0"
-          aria-label="Menu"
+          aria-label={lang === 'ar' ? 'القائمة' : 'Menu'}
         >
           <Menu className="w-5 h-5" />
         </button>
@@ -73,26 +74,27 @@ export function TopBar({
         </div>
       </div>
 
-      {/* End Zone: Offline Pill, Install, Backup, Language Toggle, Notification Bell, Primary CTA */}
+      {/* End Zone: Offline Pill, Install, Guide (?), Language Toggle, Notification Bell, Primary CTA */}
       <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
-        {!isOnline && (
-          <span
-            className="inline-flex items-center justify-center gap-1 px-2 md:px-2.5 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 text-xs font-medium text-amber-800 dark:text-amber-300 whitespace-nowrap"
-            title={t.pwa.offline}
-          >
-            <WifiOff className="w-3.5 h-3.5 shrink-0" />
-            <span className="hidden md:inline">{t.pwa.offline}</span>
+        <button
+          type="button"
+          onClick={onOpenGuide}
+          className={`inline-flex items-center justify-center gap-1.5 px-2 md:px-2.5 py-1.5 rounded-lg border text-xs font-medium whitespace-nowrap transition-colors ${
+            !isOnline
+              ? 'bg-amber-50 dark:bg-amber-950/50 border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300'
+              : 'hidden md:inline-flex bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-200/70 dark:border-emerald-800/50 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100/70 dark:hover:bg-emerald-950/50'
+          }`}
+          title={t.pwa.offlineReady}
+        >
+          <WifiOff className="w-3.5 h-3.5 shrink-0" />
+          <span className="hidden md:inline">
+            {!isOnline
+              ? t.pwa.offline
+              : lang === 'ar'
+              ? 'بدون إنترنت ✓'
+              : 'Offline-First ✓'}
           </span>
-        )}
-        {isOnline && (
-          <span
-            className="hidden xl:inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/70 dark:border-emerald-800/50 text-xs font-medium text-emerald-700 dark:text-emerald-400 whitespace-nowrap"
-            title={t.pwa.offlineReady}
-          >
-            <Wifi className="w-3.5 h-3.5 shrink-0" />
-            <span>{t.pwa.online}</span>
-          </span>
-        )}
+        </button>
 
         {canInstall && (
           <button
@@ -107,12 +109,16 @@ export function TopBar({
 
         <button
           type="button"
-          onClick={onOpenBackupModal}
-          className="inline-flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shrink-0"
-          title={t.backup.menuLabel}
-          aria-label={t.backup.menuLabel}
+          onClick={onOpenGuide}
+          className={`inline-flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-lg border transition-colors shrink-0 ${
+            activeView === 'guide'
+              ? 'border-emerald-600 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300'
+              : 'border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800'
+          }`}
+          title={t.nav.guide}
+          aria-label={t.nav.guide}
         >
-          <Database className="w-4 h-4" />
+          <HelpCircle className="w-4 h-4" />
         </button>
 
         <button

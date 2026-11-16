@@ -5,6 +5,7 @@ import {
   AppNotification,
   Language,
   MemorizationPlan,
+  OnboardingSetupPayload,
   QualityRating,
   ReminderSettings,
   StoredState,
@@ -274,6 +275,7 @@ function buildInitialState(): StoredState {
     notifications,
     manzilCycleDays: 7,
     isDemoMode: true,
+    onboardingCompleted: false,
   };
 }
 
@@ -295,6 +297,12 @@ function loadState(): StoredState {
     const parsed = JSON.parse(raw) as StoredState;
     if (!parsed || !Array.isArray(parsed.plans)) {
       return buildInitialState();
+    }
+    if (typeof parsed.onboardingCompleted !== 'boolean') {
+      return {
+        ...parsed,
+        onboardingCompleted: parsed.isDemoMode === false,
+      };
     }
     return parsed;
   } catch {
@@ -711,6 +719,7 @@ export function useQuranStore() {
       ...fresh,
       lang: prev.lang,
       theme: prev.theme,
+      onboardingCompleted: true,
     }));
   }, []);
 
@@ -722,7 +731,126 @@ export function useQuranStore() {
       progressMap: {},
       notifications: [],
       isDemoMode: false,
+      onboardingCompleted: true,
     }));
+  }, []);
+
+  const skipOnboardingToDemo = useCallback(() => {
+    setState((prev) => ({
+      ...prev,
+      onboardingCompleted: true,
+    }));
+  }, []);
+
+  const completeOnboardingSetup = useCallback((payload: OnboardingSetupPayload) => {
+    const today = getTodayISO();
+    const uniqueIds = Array.from(new Set(payload.memorizedSurahIds))
+      .filter((id) => Boolean(SURAH_MAP[id]))
+      .sort((a, b) => a - b);
+
+    setState((prev) => {
+      const wasDemo = prev.isDemoMode !== false;
+      const baseProgress: Record<number, SurahProgress> = wasDemo ? {} : { ...prev.progressMap };
+
+      const rating = payload.initialRating;
+      const baseScore = rating === 'mutqin' ? 92 : rating === 'good' ? 78 : 58;
+      const baseInterval = rating === 'mutqin' ? 14 : rating === 'good' ? 5 : 1;
+      const cycleSpan = Math.max(2, Math.min(7, payload.manzilCycleDays));
+
+      uniqueIds.forEach((surahId, idx) => {
+        const surah = SURAH_MAP[surahId];
+        if (!surah) return;
+        const offsetDays = idx % 3 === 0 ? 0 : idx % cycleSpan;
+        baseProgress[surahId] = {
+          surahId,
+          memorizedAyahs: surah.ayahCount,
+          status: rating === 'mutqin' ? 'mastered' : 'reviewing',
+          retentionScore: baseScore,
+          intervalDays: baseInterval,
+          lastReviewedAt: today,
+          nextReviewAt: offsetDays === 0 ? today : addDaysISO(today, offsetDays),
+          reviewCount: baseProgress[surahId]?.reviewCount ?? 1,
+          lastRating: rating,
+        };
+      });
+
+      const newPlan: MemorizationPlan | null = payload.createInitialPlan
+        ? {
+            id: `plan-${Date.now()}`,
+            name:
+              payload.planName.trim() ||
+              (prev.lang === 'ar'
+                ? 'خطة الحفظ والمراجعة الأساسية'
+                : 'Primary Memorization & Revision Plan'),
+            scopeType: payload.scopeType,
+            ...(payload.scopeType === 'juz_range'
+              ? {
+                  juzFrom: Math.min(payload.juzFrom, payload.juzTo),
+                  juzTo: Math.max(payload.juzFrom, payload.juzTo),
+                }
+              : {}),
+            direction: payload.direction,
+            dailyAmount: Math.max(0.5, payload.dailyAmount),
+            dailyUnit: payload.dailyUnit,
+            activeDaysPerWeek: Math.max(1, Math.min(7, payload.activeDaysPerWeek)),
+            revisionCycleDays: Math.max(3, payload.manzilCycleDays),
+            startDate: today,
+            isActive: true,
+            createdAt: new Date().toISOString(),
+            completedDaysCount: 0,
+          }
+        : null;
+
+      const existingRealPlans = wasDemo
+        ? []
+        : prev.plans.map((p) => (newPlan ? { ...p, isActive: false } : p));
+
+      const nextPlans = newPlan ? [newPlan, ...existingRealPlans] : existingRealPlans;
+
+      const updatedRules = prev.reminderSettings.rules.map((rule) => {
+        if (rule.type === 'daily_hifz' && payload.morningReminderTime) {
+          return { ...rule, enabled: true, time: payload.morningReminderTime };
+        }
+        if (rule.type === 'evening_revision' && payload.eveningReminderTime) {
+          return { ...rule, enabled: true, time: payload.eveningReminderTime };
+        }
+        return rule;
+      });
+
+      const welcomeNotif: AppNotification = {
+        id: `notif-onboard-${Date.now()}`,
+        titleAr: 'تم تجهيز خطة حفظك ومحفوظك بنجاح',
+        titleEn: 'Your Memorization Profile & Plan Are Ready',
+        bodyAr:
+          uniqueIds.length > 0
+            ? `تم تسجيل ${uniqueIds.length} سورة في سجل محفوظك وجدولة مراجعتها تلقائياً وفق دورة ${payload.manzilCycleDays} أيام.`
+            : 'أهلاً بك في إتقان! خطتك اليومية جاهزة، اضغط على الورد اليومي للبدء بالصفحة الأولى.',
+        bodyEn:
+          uniqueIds.length > 0
+            ? `Added ${uniqueIds.length} memorized surahs and scheduled spaced-repetition reviews across a ${payload.manzilCycleDays}-day Manzil cycle.`
+            : 'Welcome to Itqan! Your active plan is ready — open Today’s Wird to log your first session.',
+        createdAt: new Date().toISOString(),
+        read: false,
+        category: 'milestone',
+      };
+
+      return {
+        ...prev,
+        plans: nextPlans,
+        sessions: wasDemo ? [] : prev.sessions,
+        progressMap: baseProgress,
+        manzilCycleDays: Math.max(3, payload.manzilCycleDays),
+        reminderSettings: {
+          ...prev.reminderSettings,
+          rules: updatedRules,
+        },
+        notifications: wasDemo
+          ? [welcomeNotif]
+          : [welcomeNotif, ...prev.notifications].slice(0, 30),
+        isDemoMode: false,
+        onboardingCompleted: true,
+      };
+    });
   }, []);
 
   const dismissDemoBanner = useCallback(() => {
@@ -812,6 +940,8 @@ export function useQuranStore() {
     triggerTestNotification,
     resetDemoData,
     startFreshEmpty,
+    skipOnboardingToDemo,
+    completeOnboardingSetup,
     dismissDemoBanner,
     deleteSession,
     exportBackupJSON,

@@ -6,11 +6,12 @@ import {
   Compass,
   Database,
   Download,
+  HelpCircle,
   LayoutDashboard,
   Moon,
   Repeat,
+  SlidersHorizontal,
   Sun,
-  Wifi,
   WifiOff,
   X,
 } from 'lucide-react';
@@ -29,6 +30,7 @@ interface SidebarProps {
   canInstall: boolean;
   onInstallApp: () => void;
   onOpenBackupModal: () => void;
+  onOpenSetupWizard: () => void;
   onCloseMobile: () => void;
   onSelectView: (view: ActiveView) => void;
   onToggleTheme: () => void;
@@ -46,6 +48,7 @@ export function Sidebar({
   canInstall,
   onInstallApp,
   onOpenBackupModal,
+  onOpenSetupWizard,
   onCloseMobile,
   onSelectView,
   onToggleTheme,
@@ -65,6 +68,7 @@ export function Sidebar({
       icon: <BellRing className="w-4 h-4 shrink-0" />,
       count: unreadCount > 0 ? unreadCount : undefined,
     },
+    { id: 'guide', label: t.nav.guide, icon: <HelpCircle className="w-4 h-4 shrink-0" /> },
   ];
 
   const handleNav = (view: ActiveView) => {
@@ -99,7 +103,10 @@ export function Sidebar({
       </div>
 
       {/* Navigation Links */}
-      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1" aria-label="Main Navigation">
+      <nav
+        className="flex-1 overflow-y-auto px-3 py-4 space-y-1"
+        aria-label={lang === 'ar' ? 'القائمة الرئيسية' : 'Main Navigation'}
+      >
         {navItems.map((item) => {
           const isActive = activeView === item.id;
           return (
@@ -127,20 +134,22 @@ export function Sidebar({
         })}
       </nav>
 
-      {/* Bottom PWA Status, Backup, Theme & Language Controls */}
+      {/* Bottom PWA Status, Setup Wizard, Backup, Theme & Language Controls */}
       <div className="p-3 border-t border-slate-200 dark:border-slate-800 space-y-1.5">
-        <div className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-950/60 text-xs">
-          <span className="inline-flex items-center gap-2 text-slate-600 dark:text-slate-300">
-            {isOnline ? (
-              <Wifi className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-            ) : (
-              <WifiOff className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
-            )}
-            <span>{isOnline ? t.pwa.online : t.pwa.offline}</span>
+        <div className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/70 dark:border-emerald-900/50 text-xs">
+          <span className="inline-flex items-center gap-2 text-emerald-800 dark:text-emerald-300 font-medium">
+            <WifiOff className="w-3.5 h-3.5 shrink-0" />
+            <span>
+              {!isOnline
+                ? t.pwa.offline
+                : lang === 'ar'
+                ? 'يعمل 100% بدون إنترنت'
+                : '100% Offline-First'}
+            </span>
           </span>
           {isOfflineReady && (
-            <span className="text-[10px] font-medium text-emerald-700 dark:text-emerald-400">
-              {lang === 'ar' ? 'Offline ✓' : 'PWA ✓'}
+            <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">
+              {lang === 'ar' ? 'جاهز ✓' : 'PWA ✓'}
             </span>
           )}
         </div>
@@ -158,6 +167,20 @@ export function Sidebar({
             <span>{t.pwa.installApp}</span>
           </button>
         )}
+
+        <button
+          type="button"
+          onClick={() => {
+            onOpenSetupWizard();
+            onCloseMobile();
+          }}
+          className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800/70 dark:hover:text-slate-100 transition-colors whitespace-nowrap"
+        >
+          <span className="flex items-center gap-2.5 min-w-0">
+            <SlidersHorizontal className="w-4 h-4 shrink-0" />
+            <span className="truncate">{t.guide.btnOpenWizard}</span>
+          </span>
+        </button>
 
         <button
           type="button"
