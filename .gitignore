@@ -7,3 +7,7 @@ coverage/
 .env*
 !.env.example
 Docs/
+
+# Local AI agent instructions
+AGENTS.md
+CLAUDE.md
